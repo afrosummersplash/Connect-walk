@@ -1100,18 +1100,31 @@
     e.preventDefault();
     const name = document.getElementById('ticket-name').textContent;
     const ics = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT',
-      'DTSTART:20260704T120000Z', 'DTEND:20260704T160000Z',
-      'SUMMARY:Connect Walk – Seven Sisters (Afro Summer Splash)',
-      'DESCRIPTION:Meet-up 12:30 PM. Walk starts 1:00 PM. Registered: ' + name,
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Afro Summer Splash//Connect Walk//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      'DTSTART:20260704T123000Z',
+      'DTEND:20260704T160000Z',
+      'SUMMARY:Connect Walk – Seven Sisters',
+      'DESCRIPTION:Afro Summer Splash Connect Walk. Meet-up 12:30 PM. Walk starts 1:00 PM. Registered: ' + name,
       'LOCATION:Seven Sisters Visitor Centre\\, Exceat\\, BN25 4AD',
-      'END:VEVENT', 'END:VCALENDAR'
+      'URL:https://afrosummersplash.github.io/Connect-walk/',
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
     ].join('\r\n');
-    const blob = new Blob([ics], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
+
+    // iOS-compatible: data URI triggers Calendar app directly
+    const dataURI = 'data:text/calendar;charset=utf8,' + encodeURIComponent(ics);
     const a = document.createElement('a');
-    a.href = url; a.download = 'connect-walk-seven-sisters.ics'; a.click();
-    URL.revokeObjectURL(url);
+    a.href = dataURI;
+    a.download = 'connect-walk-seven-sisters.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 </script>
 </body>
