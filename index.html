@@ -528,10 +528,10 @@
     background: var(--white);
     border-radius: 10px;
     padding: 8px;
-    width: 112px;
-    height: 112px;
-    min-width: 112px;
-    min-height: 112px;
+    width: 96px;
+    height: 96px;
+    min-width: 96px;
+    min-height: 96px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -540,8 +540,8 @@
 
   #qr-code { display: flex; align-items: center; justify-content: center; }
   #qr-code canvas, #qr-code img {
-    width: 96px !important;
-    height: 96px !important;
+    width: 80px !important;
+    height: 80px !important;
     display: block !important;
   }
 
@@ -963,8 +963,8 @@
     try {
       new QRCode(el, {
         text: text,
-        width: 96,
-        height: 96,
+        width: 80,
+        height: 80,
         colorDark: '#0f1628',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
@@ -974,14 +974,14 @@
         const img = el.querySelector('img');
         if (img) {
           img.style.display = 'block';
-          img.style.width = '96px';
-          img.style.height = '96px';
+          img.style.width = '80px';
+          img.style.height = '80px';
         }
         const canvas = el.querySelector('canvas');
         if (canvas) {
           canvas.style.display = 'block';
-          canvas.style.width = '96px';
-          canvas.style.height = '96px';
+          canvas.style.width = '80px';
+          canvas.style.height = '80px';
         }
       }, 100);
     } catch(e) { console.warn('QRCode init failed:', e); }
@@ -1019,15 +1019,18 @@
     const allergies = document.getElementById('allergies').value.trim();
     const ref = genRef();
 
+    // Generate QR for on-screen display
     let qrDataURL = '';
     try {
-      // QR always points to afrosummersplash Instagram
       const qrText = 'https://www.instagram.com/afrosummersplash/';
       generateQR(qrText);
       qrDataURL = await getQRDataURL();
     } catch (qrErr) {
       console.warn('QR generation failed:', qrErr);
     }
+
+    // For email: use qrserver.com hosted URL — works in all email clients
+    const qrEmailURL = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://www.instagram.com/afrosummersplash/') + '&color=0f1628&bgcolor=ffffff&margin=6';
 
     document.getElementById('ticket-name').textContent = firstName + ' ' + lastName;
     document.getElementById('ticket-ref').textContent = ref;
@@ -1066,7 +1069,7 @@
     // Step 2: EmailJS — fire and don't block on failure
     try {
       await emailjs.send('service_u6tdzk8', 'template_nt2x6vz', {
-        first_name: firstName, email, ref, qr_code: qrDataURL
+        first_name: firstName, email, ref, qr_code: qrEmailURL
       });
     } catch (ejErr) {
       console.warn('EmailJS failed (non-blocking):', ejErr);
