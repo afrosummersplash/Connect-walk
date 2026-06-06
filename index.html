@@ -1022,7 +1022,7 @@
     // Generate QR for on-screen display
     let qrDataURL = '';
     try {
-      const qrText = 'https://qrco.de/bgr9De';
+      const qrText = 'https://www.instagram.com/afrosummersplash?igsh=MWM5N254amZyNTEy&utm_source=qr';
       generateQR(qrText);
       qrDataURL = await getQRDataURL();
     } catch (qrErr) {
@@ -1030,7 +1030,7 @@
     }
 
     // For email: use qrserver.com hosted URL — works in all email clients
-    const qrEmailURL = 'https://qrco.de/bgr9De';
+    const qrEmailURL = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://www.instagram.com/afrosummersplash?igsh=MWM5N254amZyNTEy&utm_source=qr') + '&color=0f1628&bgcolor=ffffff&margin=6';
 
     document.getElementById('ticket-name').textContent = firstName + ' ' + lastName;
     document.getElementById('ticket-ref').textContent = ref;
