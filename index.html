@@ -939,24 +939,29 @@
   function generateQR(text) {
     const el = document.getElementById('qr-code');
     el.innerHTML = '';
-    new QRCode(el, {
-      text: text,
-      width: 80,
-      height: 80,
-      colorDark: '#0f1628',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
+    try {
+      new QRCode(el, {
+        text: text,
+        width: 80,
+        height: 80,
+        colorDark: '#0f1628',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e) { console.warn('QRCode init failed:', e); }
   }
 
   function getQRDataURL() {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      // Try immediately, then after short delay, then give up
+      const attempt = () => {
         const canvas = document.querySelector('#qr-code canvas');
         if (canvas) { resolve(canvas.toDataURL('image/png')); return; }
         const img = document.querySelector('#qr-code img');
-        resolve(img ? img.src : '');
-      }, 350);
+        if (img && img.src) { resolve(img.src); return; }
+        resolve('');
+      };
+      setTimeout(attempt, 200);
     });
   }
 
@@ -980,8 +985,13 @@
     const allergies = document.getElementById('allergies').value.trim();
     const ref = genRef();
 
-    generateQR(`Connect Walk – Seven Sisters\nRef: ${ref}\n${firstName} ${lastName}\n4 July 2026`);
-    const qrDataURL = await getQRDataURL();
+    let qrDataURL = '';
+    try {
+      generateQR(`Connect Walk – Seven Sisters\nRef: ${ref}\n${firstName} ${lastName}\n4 July 2026`);
+      qrDataURL = await getQRDataURL();
+    } catch (qrErr) {
+      console.warn('QR generation failed:', qrErr);
+    }
 
     document.getElementById('ticket-name').textContent = firstName + ' ' + lastName;
     document.getElementById('ticket-ref').textContent = ref;
@@ -993,8 +1003,16 @@
       document.getElementById('ticket-joining-val').textContent = joiningFrom;
     }
 
+    // Hard failsafe — show ticket after 6s no matter what
+    const failsafe = setTimeout(() => {
+      document.getElementById('form-screen').style.display = 'none';
+      document.getElementById('ticket-screen').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 6000);
+
+    // Step 1: Formspree — fire and don't block on failure
     try {
-      await fetch('https://formspree.io/f/xykakdvp', {
+      const fsRes = await fetch('https://formspree.io/f/xykakdvp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -1004,21 +1022,25 @@
           ref, event: 'Connect Walk – Seven Sisters', date: '4 July 2026'
         })
       });
+      if (!fsRes.ok) console.warn('Formspree non-OK:', fsRes.status);
+    } catch (fsErr) {
+      console.warn('Formspree failed (non-blocking):', fsErr);
+    }
 
-      await emailjs.send('service_u6tdzk8', 'template_nyfidlw', {
+    // Step 2: EmailJS — fire and don't block on failure
+    try {
+      await emailjs.send('service_u6tdzk8', 'template_nt2x6vz', {
         first_name: firstName, email, ref, qr_code: qrDataURL
       });
-
-      document.getElementById('form-screen').style.display = 'none';
-      document.getElementById('ticket-screen').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    } catch (err) {
-      console.error(err);
-      btnText.textContent = 'Secure my spot';
-      btn.disabled = false;
-      errorMsg.style.display = 'block';
+    } catch (ejErr) {
+      console.warn('EmailJS failed (non-blocking):', ejErr);
     }
+
+    // Step 3: Always show ticket regardless
+    clearTimeout(failsafe);
+    document.getElementById('form-screen').style.display = 'none';
+    document.getElementById('ticket-screen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   function shareTicket() {
