@@ -935,7 +935,7 @@
 
     <div class="ticket-actions">
       <button class="action-btn btn-glass" onclick="shareTicket()">📤 Share</button>
-      <a class="action-btn btn-glass" href="#" onclick="addToCalendar(event)">📅 Add to Calendar</a>
+      <a class="action-btn btn-glass" href="#" onclick="addToCalendar(event)">📅 Add to Google Calendar</a>
     </div>
 
     <div class="follow-note">
@@ -1099,32 +1099,18 @@
   function addToCalendar(e) {
     e.preventDefault();
     const name = document.getElementById('ticket-name').textContent;
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Afro Summer Splash//Connect Walk//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      'DTSTART:20260704T123000Z',
-      'DTEND:20260704T160000Z',
-      'SUMMARY:Connect Walk – Seven Sisters',
-      'DESCRIPTION:Afro Summer Splash Connect Walk. Meet-up 12:30 PM. Walk starts 1:00 PM. Registered: ' + name,
-      'LOCATION:Seven Sisters Visitor Centre\\, Exceat\\, BN25 4AD',
-      'URL:https://afrosummersplash.github.io/Connect-walk/',
-      'STATUS:CONFIRMED',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
 
-    // iOS-compatible: data URI triggers Calendar app directly
-    const dataURI = 'data:text/calendar;charset=utf8,' + encodeURIComponent(ics);
-    const a = document.createElement('a');
-    a.href = dataURI;
-    a.download = 'connect-walk-seven-sisters.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Google Calendar URL — works on all devices including iOS
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: 'Connect Walk – Seven Sisters (Afro Summer Splash)',
+      dates: '20260704T123000Z/20260704T160000Z',
+      details: 'Afro Summer Splash Connect Walk. Meet-up 12:30 PM. Walk starts 1:00 PM.\n\nRegistered: ' + name + '\n\nhttps://afrosummersplash.github.io/Connect-walk/',
+      location: 'Seven Sisters Visitor Centre, Exceat, BN25 4AD',
+      sf: 'true',
+      output: 'xml'
+    });
+    window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank');
   }
 </script>
 </body>
