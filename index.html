@@ -528,16 +528,18 @@
     background: var(--white);
     border-radius: 10px;
     padding: 8px;
-    width: 96px;
-    height: 96px;
+    width: 112px;
+    height: 112px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
+  #qr-code { display: flex; align-items: center; justify-content: center; }
   #qr-code canvas, #qr-code img {
-    width: 80px !important;
-    height: 80px !important;
+    width: 96px !important;
+    height: 96px !important;
+    display: block !important;
   }
 
   .ticket-attendee { flex: 1; min-width: 0; }
@@ -942,8 +944,8 @@
     try {
       new QRCode(el, {
         text: text,
-        width: 80,
-        height: 80,
+        width: 128,
+        height: 128,
         colorDark: '#0f1628',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
@@ -953,15 +955,14 @@
 
   function getQRDataURL() {
     return new Promise((resolve) => {
-      // Try immediately, then after short delay, then give up
       const attempt = () => {
         const canvas = document.querySelector('#qr-code canvas');
         if (canvas) { resolve(canvas.toDataURL('image/png')); return; }
         const img = document.querySelector('#qr-code img');
-        if (img && img.src) { resolve(img.src); return; }
+        if (img && img.src && img.src !== window.location.href) { resolve(img.src); return; }
         resolve('');
       };
-      setTimeout(attempt, 200);
+      setTimeout(attempt, 500);
     });
   }
 
@@ -987,7 +988,12 @@
 
     let qrDataURL = '';
     try {
-      generateQR(`Connect Walk – Seven Sisters\nRef: ${ref}\n${firstName} ${lastName}\n4 July 2026`);
+      // QR points to Instagram handle (or profile URL if handle provided)
+      const igHandle = instagram ? instagram.replace('@','') : '';
+      const qrText = igHandle
+        ? `https://www.instagram.com/${igHandle}/`
+        : `https://www.instagram.com/afrosummersplash/`;
+      generateQR(qrText);
       qrDataURL = await getQRDataURL();
     } catch (qrErr) {
       console.warn('QR generation failed:', qrErr);
