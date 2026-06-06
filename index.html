@@ -530,9 +530,12 @@
     padding: 8px;
     width: 112px;
     height: 112px;
+    min-width: 112px;
+    min-height: 112px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
   }
 
   #qr-code { display: flex; align-items: center; justify-content: center; }
@@ -651,6 +654,18 @@
   }
 
   .follow-note strong { color: rgba(255,255,255,0.8); }
+
+  .ig-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .ig-link:hover { color: var(--gold); }
+  .ig-link svg { vertical-align: middle; }
 
   /* Animations */
   @keyframes fadeUp {
@@ -922,7 +937,11 @@
     </div>
 
     <div class="follow-note">
-      Follow us for updates: <strong>@afrosummersplash</strong>
+      Follow us for updates:
+      <a href="https://www.instagram.com/afrosummersplash/" target="_blank" class="ig-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        <strong>@afrosummersplash</strong>
+      </a>
     </div>
 
   </div>
@@ -944,25 +963,39 @@
     try {
       new QRCode(el, {
         text: text,
-        width: 128,
-        height: 128,
+        width: 96,
+        height: 96,
         colorDark: '#0f1628',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
       });
+      // Force img visibility after render
+      setTimeout(() => {
+        const img = el.querySelector('img');
+        if (img) {
+          img.style.display = 'block';
+          img.style.width = '96px';
+          img.style.height = '96px';
+        }
+        const canvas = el.querySelector('canvas');
+        if (canvas) {
+          canvas.style.display = 'block';
+          canvas.style.width = '96px';
+          canvas.style.height = '96px';
+        }
+      }, 100);
     } catch(e) { console.warn('QRCode init failed:', e); }
   }
 
   function getQRDataURL() {
     return new Promise((resolve) => {
-      const attempt = () => {
+      setTimeout(() => {
         const canvas = document.querySelector('#qr-code canvas');
-        if (canvas) { resolve(canvas.toDataURL('image/png')); return; }
+        if (canvas) { try { resolve(canvas.toDataURL('image/png')); return; } catch(e) {} }
         const img = document.querySelector('#qr-code img');
-        if (img && img.src && img.src !== window.location.href) { resolve(img.src); return; }
+        if (img && img.src && img.src.length > 100) { resolve(img.src); return; }
         resolve('');
-      };
-      setTimeout(attempt, 500);
+      }, 600);
     });
   }
 
@@ -988,11 +1021,8 @@
 
     let qrDataURL = '';
     try {
-      // QR points to Instagram handle (or profile URL if handle provided)
-      const igHandle = instagram ? instagram.replace('@','') : '';
-      const qrText = igHandle
-        ? `https://www.instagram.com/${igHandle}/`
-        : `https://www.instagram.com/afrosummersplash/`;
+      // QR always points to afrosummersplash Instagram
+      const qrText = 'https://www.instagram.com/afrosummersplash/';
       generateQR(qrText);
       qrDataURL = await getQRDataURL();
     } catch (qrErr) {
